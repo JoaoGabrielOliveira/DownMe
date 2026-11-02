@@ -1,0 +1,6 @@
+@Download_Management_HostAddress = http://localhost:5089
+
+GET {{Download_Management_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

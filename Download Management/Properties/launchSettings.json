@@ -1,0 +1,33 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5089",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "AMQP_USERNAME": "net-publisher",
+        "AMQP_PASSWORD": "net-publisher",
+        "AMQP_VIRTUAL_HOST": "/main",
+        "AMQP_HOST": "localhost",
+        "AMQP_PORT": "5672",
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7216;http://localhost:5089",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "AMQP_USERNAME": "net-publisher",
+        "AMQP_PASSWORD": "net-publisher",
+        "AMQP_VIRTUAL_HOST": "/main",
+        "AMQP_HOST": "localhost",
+        "AMQP_PORT": "5672",
+      }
+    }
+  }
+}
