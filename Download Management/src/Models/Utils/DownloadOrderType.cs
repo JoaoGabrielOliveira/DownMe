@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace API.Models.Utils;
 
 public sealed class DownloadOrderType
@@ -10,6 +12,7 @@ public sealed class DownloadOrderType
     public string Name {get; private set; }
     public string Key {get; private set; }
 
+    [JsonConstructor]
     private DownloadOrderType(string name, string key)
     {
         Name = name;

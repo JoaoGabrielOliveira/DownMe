@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Service.Data;
+using API.Service.Worker;
 
 [assembly: ApiController]
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,7 @@ builder.Services.AddDbContext<DownloadRepository>(options =>
 builder.Services.AddSingleton<IRabbitMQConnection, RabbitMQConnection>();
 builder.Services.AddScoped(typeof (IMessageService<>), typeof(RabbitMessageService<>));
 builder.Services.AddScoped<IDownloadService, DownloadService>();
+builder.Services.AddHostedService<MessageConsumerWorker>();
 
 var app = builder.Build();
 
