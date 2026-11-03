@@ -5,6 +5,7 @@ using RabbitMQ.AMQP.Client.Impl;
 
 public interface IMessageService<T> where T : class
 {
+    /* TODO remove this guy and swap to a Factory Pattern to keep the DI pattern */
     public string ExchangeName { get; set; }
     public Task publishMessage(T message, string key);
 }
@@ -35,11 +36,18 @@ public class RabbitMessageService<T> : IMessageService<T> where T : class
             IMessage amqpMessage = new AmqpMessage(message.ToString());
 
             var result = await _publisher.PublishAsync(amqpMessage);
-            
-            if (result.Outcome.State != OutcomeState.Accepted)
+
+            if (result != null)
+            {    
+                if (result.Outcome.State != OutcomeState.Accepted)
+                {
+                    throw new Exception(string.Format("Message was not published, {0}", result.Outcome.State));
+                }
+            } else
             {
-                throw new Exception(string.Format("Message was not published, {0}", result.Outcome.State));
+                throw new Exception("Result is null");
             }
+            
         }
         finally
         {

@@ -4,6 +4,7 @@ using API.Models.Data;
 using API.Models.Request;
 using API.Models.Utils;
 using API.Service.Data;
+using RabbitMQ.AMQP.Client;
 
 public interface IDownloadService
 {
@@ -28,13 +29,22 @@ public class DownloadService : IDownloadService
     }
 
     public async Task AddDownloadQueue(Download download)
-    {
-        DownloadMessage message = new(download.Link, 0, []);
+    {   
+        await using var transaction = await DownloadRepository.Database.BeginTransactionAsync();
+        try
+        {
+            DownloadRepository.Add(download);
+            await DownloadRepository.SaveChangesAsync();
+   
+            await MessageService.publishMessage(new DownloadMessage(download, DownloadOrderType.Add), DownloadOrderType.Add.Key);
+        }
+        catch (PublisherException e)
+        {
+            await transaction.RollbackAsync();
+            throw new Exception("Error to send queue", e);
+        }
 
-        DownloadRepository.Add(download);
-        await DownloadRepository.SaveChangesAsync();
-        
-        await MessageService.publishMessage(message, DownloadOrderType.Start.Exchange);
+        await transaction.CommitAsync();
     }
 
     public async Task<DownloadStatus?> CheckStatusDownloadQueue(ulong id)
@@ -49,7 +59,6 @@ public class DownloadService : IDownloadService
 
     public async Task StopDownloadQueue(Download download)
     {
-        DownloadMessageStop message = new(download.Id);
-        await MessageService.publishMessage(message, DownloadOrderType.Stop.Exchange);
+        await MessageService.publishMessage(new DownloadMessage(download, DownloadOrderType.Stop), DownloadOrderType.Stop.Key);
     }
 }

@@ -24,16 +24,22 @@ public class DownloadsController : ControllerBase
     [HttpPost]
     public async Task<IResult> AddDownload([FromBody] DownloadRequest donwloadRequest)
     {
-        Download download = new Download()
+        Download download = new()
         {
             Name = donwloadRequest.Name,
             Link = donwloadRequest.MagnetLink,
             Status = DownloadStatus.WAITING
         };
 
-        await DownloadService.AddDownloadQueue(download);
-
-        return Results.Created();
+        try
+        {
+            await DownloadService.AddDownloadQueue(download);
+            return Results.Created();
+        }
+        catch
+        {
+            return Results.InternalServerError();
+        }
     }
 
     [HttpPost("{id}/stop")]
@@ -69,13 +75,10 @@ public class DownloadsController : ControllerBase
                 return Results.NotFound();
             }
 
-            return Results.Ok(Enum.GetName(status));
-        } catch (InvalidOperationException e)
+            return Results.Ok(Enum.GetName(status ?? DownloadStatus.WAITING));
+        } catch
         {
-            return Results.InternalServerError(e);
-        } catch(DbException e)
-        {
-            return Results.InternalServerError(e.Data);
+            return Results.InternalServerError();
         }
     }
 }

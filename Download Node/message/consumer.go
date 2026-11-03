@@ -1,4 +1,4 @@
-package consumer
+package message
 
 import (
 	"context"
@@ -6,25 +6,22 @@ import (
 	"errors"
 	"log"
 
+	"github.com/Azure/go-amqp"
 	"github.com/downloadNode/model"
 
 	rmq "github.com/rabbitmq/rabbitmq-amqp-go-client/pkg/rabbitmqamqp"
 )
 
-var consumer *rmq.Consumer
-
-func ConnectQueue(ctx context.Context, connection *rmq.AmqpConnection, queueName string) {
+func GetConsumer(ctx context.Context, connection *rmq.AmqpConnection, queueName string) *rmq.Consumer {
 	consumerConnected, err := connection.NewConsumer(ctx, queueName, nil)
 	if err != nil {
-		log.Panicf("Error to create consumer: %s", err)
+		log.Fatalf("Error to create consumer: %s", err)
 	}
 
-	consumer = consumerConnected
+	return consumerConnected
 }
 
-func Consume(ctx context.Context) {
-	defer func() { _ = consumer.Close(context.Background()) }()
-
+func Consume(ctx context.Context, consumer *rmq.Consumer, callback func(model.DownloadRequest, rmq.IDeliveryContext)) {
 	for {
 		delivery, err := consumer.Receive(ctx)
 		if err != nil {
@@ -33,6 +30,7 @@ func Consume(ctx context.Context) {
 			}
 			log.Panicf("Failed to receive a message: %v", err)
 		}
+
 		var downloadRequest model.DownloadRequest
 		var body string
 		msg := delivery.Message()
@@ -41,10 +39,11 @@ func Consume(ctx context.Context) {
 			body = string(msg.Data[0])
 			err = json.Unmarshal([]byte(body), &downloadRequest)
 		}
-		log.Printf("Received a message: %s", body)
-		err = delivery.Accept(ctx)
-		if err != nil {
-			log.Panicf("Failed to accept message: %v", err)
-		}
+
+		go callback(downloadRequest, delivery)
 	}
+}
+
+func MessageToDownloadRequest(message amqp.Message) {
+
 }
